@@ -1,0 +1,113 @@
+<!doctype>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Pink Mystery Quest</title>
+  <style>
+    *{box-sizing:border-box} body{min-height:100vh;margin:0;display:grid;place-items:center;padding:20px;overflow:hidden;color:#704960;font-family:system-ui,sans-serif;background:radial-gradient(circle at 20% 15%,#fffaff,transparent 38%),radial-gradient(circle at 85% 80%,#edbad1,transparent 42%),linear-gradient(135deg,#fdeff5,#f8d7e5)} main{width:min(780px,100%);text-align:center} h1{margin:0 0 12px;color:#a34e78;font-size:clamp(2.4rem,8vw,4.5rem)} h2{margin-top:0}[hidden]{display:none!important}.card{position:relative;min-height:370px;display:grid;place-items:center;overflow:hidden;padding:28px;border:1px solid #ffffffd9;border-radius:30px;background:#ffffff4d;box-shadow:inset 0 1px 2px #fff,0 15px 45px #ae708f29;backdrop-filter:blur(22px) saturate(160%)}button{border:1px solid #ffffffd9;border-radius:999px;padding:15px 25px;color:#75445f;background:linear-gradient(145deg,#ffffffef,#ffffff4d 45%,#ffc0dc94);box-shadow:inset 0 2px 4px #fffffffA,inset 0 -4px 10px #c480a033,0 9px 22px #874b6a33;backdrop-filter:blur(20px) saturate(180%);font:inherit;font-weight:800;cursor:pointer}.choices,.maze-controls div,.puppy-actions{display:flex;flex-wrap:wrap;justify-content:center;gap:12px;margin-top:20px}button:hover{background:linear-gradient(145deg,#fff,#ffffff88 45%,#ffc0dcbf)}button:active{transform:scale(.96)}button:focus-visible{outline:3px solid #a34e78;outline-offset:4px}.note{min-height:24px;color:#a34e78;font-weight:700}#start-button{position:absolute;left:50%;top:57%;transform:translate(-50%,-50%);animation:bob .7s infinite alternate}@keyframes bob{to{margin-top:-12px}}#boom{position:fixed;inset:0;z-index:20;display:grid;place-items:center;color:white;background:radial-gradient(circle,#ff83b7,#a34e78 70%);font-size:clamp(4rem,20vw,12rem);font-weight:1000;animation:boom .65s forwards;pointer-events:none}@keyframes boom{0%{opacity:0;transform:scale(.2)}35%{opacity:1;transform:scale(1.1)}100%{opacity:0;transform:scale(1.8)}}#puppy-overlay{position:fixed;inset:0;z-index:30;display:grid;place-items:center;padding:20px;background:#ffdeeddb;backdrop-filter:blur(10px)}.puppy-card{width:min(480px,100%);padding:28px;border:1px solid #ffffffed;border-radius:30px;background:#ffffffc7;box-shadow:inset 0 2px 5px white,0 18px 55px #874b6a38;backdrop-filter:blur(20px);animation:pop .35s ease-out}.puppy-face{font-size:clamp(5rem,20vw,8rem);line-height:1}.puppy-speech{min-height:58px;font-size:1.15rem;font-weight:700;line-height:1.5}@keyframes pop{from{opacity:0;transform:scale(.75)}to{opacity:1;transform:scale(1)}}#puzzle-screen{min-height:590px}#maze{--cell:25px;display:grid;gap:2px;width:max-content;margin:16px auto;padding:7px;border:2px solid #a34e7859;border-radius:12px;background:#ffffff73}.maze-cell{display:grid;place-items:center;width:var(--cell);height:var(--cell);border-radius:4px;background:#ffffffcc;font-size:15px}.maze-wall{background:#c77ba1}.maze-player{background:#91c9ff}.maze-goal{background:#a9e6bd}.maze-controls{display:grid;gap:6px;justify-items:center}.maze-controls div{margin-top:6px}.maze-controls button{min-width:48px;min-height:42px;padding:8px 13px}#final-screen{min-height:450px}#final-content{position:relative;width:100%;height:340px}#final-button{position:absolute;white-space:nowrap}.bouncing{transition:none}@media(max-width:520px){.card{padding:18px 10px}#puzzle-screen{min-height:470px}#maze{--cell:17px;gap:1px}.maze-cell{font-size:11px}}
+  </style>
+</head>
+<body>
+<main>
+  <h1 id="page-title">Catch me if you can!</h1>
+  <section class="card" id="start-screen">
+    <div><p>There’s a button somewhere in here...</p><button id="start-button">Catch me!</button></div>
+  </section>
+
+  <section class="card" id="question-screen" hidden>
+    <div><h2 id="random-question"></h2><p>Choose your answer:</p>
+      <div class="choices">
+        <button id="yes-button">Yes</button>
+        <button id="idk-button">I don't know</button>
+        <button id="no-button">No</button>
+      </div><p class="note" id="question-note" aria-live="polite"></p>
+    </div>
+  </section>
+
+  <section class="card" id="puzzle-screen" hidden>
+    <div><h2>Escape the random maze! 🧩</h2><p>Move 🙂 to 🏁 using arrows, WASD, or buttons.</p>
+      <div id="maze" aria-label="Random maze"></div>
+      <div class="maze-controls"><button data-move="up">▲</button><div><button data-move="left">◀</button><button data-move="down">▼</button><button data-move="right">▶</button></div></div>
+      <p class="note" id="puzzle-note" aria-live="polite"></p>
+    </div>
+  </section>
+
+  <section class="card" id="final-screen" hidden>
+    <div id="final-content"><h2>You escaped! 🎉</h2><p>Touch the button to make it bounce like a ball!</p><button id="final-button">Catch me!</button></div>
+  </section>
+</main>
+
+<div id="puppy-overlay" hidden><section class="puppy-card" role="dialog" aria-modal="true"><div class="puppy-face" id="puppy-face">🐶</div><p class="puppy-speech" id="puppy-speech" aria-live="polite"></p><div class="puppy-actions" id="puppy-actions"></div></section></div>
+
+<script>
+const surpriseSites=["https://www.google.com","https://www.youtube.com","https://www.tiktok.com","https://www.messenger.com","https://www.instagram.com","https://open.spotify.com"];
+const nealSites=["https://neal.fun/","https://neal.fun/deep-sea/","https://neal.fun/size-of-space/","https://neal.fun/spend/","https://neal.fun/ambient-chaos/","https://neal.fun/perfect-circle/"];
+const puppyChoices=[["Neal.fun","https://neal.fun/"],["ChatGPT","https://chatgpt.com/"],["Google","https://www.google.com/"]];
+const $=selector=>document.querySelector(selector);
+
+const startScreen=$("#start-screen"),startButton=$("#start-button"),questionScreen=$("#question-screen"),puzzleScreen=$("#puzzle-screen"),finalScreen=$("#final-screen"),maze=$("#maze"),puzzleNote=$("#puzzle-note"),puppyOverlay=$("#puppy-overlay"),puppyFace=$("#puppy-face"),puppySpeech=$("#puppy-speech"),puppyActions=$("#puppy-actions");
+let startEscapes=0,mazeLayout=[],player={row:1,col:1},puppySequence=0;
+
+const questions=["Would you explore a mysterious pink island? 🏝️","Would you make friends with a moon cat? 🌙","Would you enter a castle made of clouds? ☁️","Would you investigate a hidden pink doorway? 🚪"];
+$("#random-question").textContent=questions[Math.floor(Math.random()*questions.length)];
+const openTab=url=>window.open(url,"_blank","noopener,noreferrer");
+
+function showPuppy(message,face="🐶",buttons=[]){
+  puppyFace.textContent=face; puppySpeech.textContent=message; puppyActions.replaceChildren(); puppyOverlay.hidden=false;
+  for(const [label,action] of buttons){const b=document.createElement("button");b.textContent=label;b.onclick=action;puppyActions.appendChild(b)}
+}
+
+startScreen.addEventListener("pointermove",event=>{
+  if(event.pointerType!=="mouse"||startEscapes>=4)return;
+  const r=startButton.getBoundingClientRect(),distance=Math.hypot(event.clientX-(r.left+r.width/2),event.clientY-(r.top+r.height/2));
+  if(distance<95){const a=startScreen.getBoundingClientRect(),maxX=a.width-startButton.offsetWidth-20,maxY=a.height-startButton.offsetHeight-20;startButton.style.left=`${10+Math.random()*maxX}px`;startButton.style.top=`${10+Math.random()*maxY}px`;startButton.style.transform="none";startEscapes++}
+});
+
+startButton.onclick=()=>{const boom=document.createElement("div");boom.id="boom";boom.textContent="BOOM!";document.body.appendChild(boom);setTimeout(()=>{boom.remove();startScreen.hidden=true;questionScreen.hidden=false;$("#page-title").textContent="A mysterious question!"},650)};
+
+$("#yes-button").onclick=()=>{
+  if(Math.random()<.2){showPuppy("PUPPY SURPRISE! You found the 20% chance! 💖","🐶💖",[["Aww, continue",()=>puppyOverlay.hidden=true]])}
+  else $("#question-note").textContent="No puppy surprise this time—but that was a good choice! ✨";
+};
+
+$("#no-button").onclick=()=>{
+  const sequence=++puppySequence;
+  showPuppy("Hi! 👋","🐶");
+  setTimeout(()=>{
+    if(puppyOverlay.hidden||sequence!==puppySequence)return;
+    showPuppy("Are you new here?","🐶",[
+      ["Yes",()=>showPuppy("Oh! Congrats! Open this button! Have a good one!","🐶😊",[["Open a surprise tab!",()=>openTab(surpriseSites[Math.floor(Math.random()*surpriseSites.length)])]])],
+      ["No",()=>showPuppy("Oh! It's great that you stayed! Here's a reward and it can take you to what you wanted! Have a good one!","🐶💖",[["Get my reward!",()=>showPuppy("Pick your new tab!","🐶✨",puppyChoices.map(([label,url])=>[label,()=>openTab(url)]))]])]
+    ]);
+  },1100);
+};
+
+function generateMaze(){
+  const size=21,grid=Array.from({length:size},()=>Array(size).fill("#")),stack=[{row:1,col:1}];grid[1][1]=".";
+  while(stack.length){const current=stack[stack.length-1],directions=[[ -2,0],[2,0],[0,-2],[0,2]].sort(()=>Math.random()-.5);let carved=false;
+    for(const [dr,dc] of directions){const nr=current.row+dr,nc=current.col+dc;if(nr>0&&nr<size-1&&nc>0&&nc<size-1&&grid[nr][nc]==="#"){grid[current.row+dr/2][current.col+dc/2]=".";grid[nr][nc]=".";stack.push({row:nr,col:nc});carved=true;break}}
+    if(!carved)stack.pop()
+  }grid[1][1]="S";grid[size-2][size-2]="E";return grid.map(row=>row.join(""));
+}
+
+function drawMaze(){maze.innerHTML="";maze.style.gridTemplateColumns=`repeat(${mazeLayout[0].length},var(--cell)`;
+  mazeLayout.forEach((row,r)=>row.split("").forEach((cell,c)=>{const tile=document.createElement("div");tile.className="maze-cell";if(cell==="#")tile.classList.add("maze-wall");else if(r===player.row&&c===player.col){tile.classList.add("maze-player");tile.textContent="🙂"}else if(cell=== "E")tile.classList.add("maze-goal");maze.appendChild(tile)}));
+}
+
+function startMaze(){mazeLayout=generateMaze();player={row:1,col:1};puzzleNote.textContent="Find the exit!";drawMaze()}
+function movePlayer(direction){const moves={up:[-1,0],down:[1,0],left:[0,-1],right:[0,1]},[dr,dc]=moves[direction],nr=player.row+dr,nc=player.col+dc;if(nr<0||nr>=mazeLayout.length||nc<0||nc>=mazeLayout[nr].length||mazeLayout[nr][nc]==="#")return puzzleNote.textContent="You bumped into a wall!";player={row:nr,col:nc};drawMaze();if(mazeLayout[nr][nc]==="E"){puzzleNote.textContent="You escaped the maze! 🎉";setTimeout(()=>{puzzleScreen.hidden=true;finalScreen.hidden=false;$("#page-title").textContent="The final challenge!";placeBall()},700)}else puzzleNote.textContent="Keep going!"}
+
+$("#idk-button").onclick=()=>{questionScreen.hidden=true;puzzleScreen.hidden=false;$("#page-title").textContent="Random maze!";startMaze()};
+document.querySelectorAll("[data-move]").forEach(b=>b.onclick=()=>movePlayer(b.dataset.move));
+document.addEventListener("keydown",event=>{const keys={ArrowUp:"up",ArrowDown:"down",ArrowLeft:"left",ArrowRight:"right",w:"up",s:"down",a:"left",d:"right"};if(keys[event.key]&&!puzzleScreen.hidden){event.preventDefault();movePlayer(keys[event.key])}});
+
+const finalContent=$("#final-content"),finalButton=$("#final-button");let ballX=0,ballY=0,vx=0,vy=0,bouncing=false,previous=0;
+function placeBall(){ballX=(finalContent.clientWidth-finalButton.offsetWidth)/2;ballY=finalContent.clientHeight*.65;finalButton.style.left=`${ballX}px`;finalButton.style.top=`${ballY}px`;finalButton.style.transform="none"}
+finalButton.addEventListener("pointerenter",event=>{if(bouncing)return;bouncing=true;finalButton.classList.add("bouncing");const r=finalButton.getBoundingClientRect();vx=Math.max(-450,Math.min(450,(r.left+r.width/2-event.clientX)*2));vy=-650;previous=performance.now();requestAnimationFrame(animateBall)});
+function animateBall(time){if(!bouncing)return;const elapsed=Math.min((time-previous)/1000,.03);previous=time;vy+=1450*elapsed;ballX+=vx*elapsed;ballY+=vy*elapsed;const maxX=Math.max(0,finalContent.clientWidth-finalButton.offsetWidth),maxY=Math.max(0,finalContent.clientHeight-finalButton.offsetHeight);if(ballX<0){ballX=0;vx=Math.abs(vx)*.68}else if(ballX>maxX){ballX=maxX;vx=-Math.abs(vx)*.68}if(ballY>maxY){ballY=maxY;vy=-Math.abs(vy)*.68;vx*=.88;if(Math.abs(vy)<100){vy=vx=0;bouncing=false;finalButton.classList.remove("bouncing")}}finalButton.style.left=`${ballX}px`;finalButton.style.top=`${ballY}px`;if(bouncing)requestAnimationFrame(animateBall)}
+window.addEventListener("resize",()=>{if(!finalScreen.hidden&&!bouncing)placeBall()});
+finalButton.onclick=()=>openTab(nealSites[Math.floor(Math.random()*nealSites.length)]);
+</script>
+</body>
+</html>
